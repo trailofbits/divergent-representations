@@ -1,8 +1,8 @@
 /**
  * @name Divergent Representations in While Loops
  * @problem.severity warning
- * @description Finds candidate code patterns in while loops that might be 
- *  compiled as divergent representations when optimized. 
+ * @description Finds candidate code patterns in while loops that might be
+ *  compiled as divergent representations when optimized.
  */
 
 import cpp
@@ -16,7 +16,7 @@ predicate isInExpr(Expr needle, Expr haystack) {
 }
 
 predicate varCrementedInLoop(VariableAccess access, CrementOperation op, WhileStmt loop) {
-    isInStmt(access.getBasicBlock(), loop.getStmt()) and 
+    isInStmt(access.getBasicBlock(), loop.getStmt()) and
     op.getAnOperand() = access
 }
 
@@ -33,7 +33,7 @@ predicate varAccessesArrayInLoop(VariableAccess access, ArrayExpr expr, WhileStm
 }
 
 predicate varAccessArrayInCondition(VariableAccess access, ArrayExpr expr, WhileStmt loop) {
-    expr.getArrayOffset() = access and 
+    expr.getArrayOffset() = access and
     isInExpr(access, loop.getCondition())
 }
 
@@ -41,26 +41,20 @@ predicate varAccessAfterLoop(VariableAccess access, WhileStmt loop) {
     access.getLocation().getStartLine() > loop.getLocation().getEndLine()
 }
 
-from 
-    // Function f, 
-    LocalVariable v, 
+from
+    LocalVariable v,
     IntType int_type,
     VariableAccess v_access_crement,
-    VariableAccess v_access_array, 
+    VariableAccess v_access_array,
     ArrayExpr array_expr,
     WhileStmt while_loop,
     CrementOperation crement_op
-where 
-    // Debug in sqlite3_str_vappendf.
-    // v.getName() = "i" and 
-    // f.getName() = "xmlBuildURI" and 
-    // v.getFunction() = f and 
-
+where
     // Variable is an integer.
-    v.getType() = int_type and 
-    
+    v.getType() = int_type and
+
     // Variable is incremented inside loop.
-    v_access_crement.getTarget() = v and 
+    v_access_crement.getTarget() = v and
     varCrementedInLoop(v_access_crement, crement_op, while_loop) and
 
     // Variable is declared outside the loop.
@@ -72,10 +66,10 @@ where
     varAccessArrayInCondition(v_access_array, array_expr, while_loop) and
 
     // Variable is used outside of (after) the loop.
-    exists (VariableAccess access_after_loop | 
-            access_after_loop.getTarget() = v | 
+    exists (VariableAccess access_after_loop |
+            access_after_loop.getTarget() = v |
             varAccessAfterLoop(access_after_loop, while_loop))
 
-select v, 
+select v,
        "increment in loop:", v_access_crement,
        "mem access in loop:", v_access_array

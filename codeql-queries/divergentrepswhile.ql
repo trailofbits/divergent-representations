@@ -50,8 +50,9 @@ from
     WhileStmt while_loop,
     CrementOperation crement_op
 where
-    // Variable is an integer.
+    // Variable is a signed integer.
     v.getType() = int_type and
+    int_type.isSigned() and
 
     // Variable is incremented inside loop.
     v_access_crement.getTarget() = v and

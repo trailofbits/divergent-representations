@@ -1,0 +1,5 @@
+name: divergent-representations
+version: 0.0.0
+extractor: cpp
+dependencies:
+  codeql/cpp-all: "*"

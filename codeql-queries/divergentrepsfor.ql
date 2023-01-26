@@ -90,5 +90,5 @@ where
             access_after_loop.getTarget() = v |
             varAccessAfterLoop(access_after_loop, for_loop))
 
-select v_access_crement,
+select for_loop,
     "Variable " + v_access_crement + " is incremented in loop with a memory access at " + v_access_array

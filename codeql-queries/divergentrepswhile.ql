@@ -1,8 +1,11 @@
 /**
  * @name Divergent Representations in While Loops
- * @problem.severity warning
  * @description Finds candidate code patterns in while loops that might be
- *  compiled as divergent representations when optimized.
+ *              compiled as divergent representations when optimized.
+ * @kind problem
+ * @id trailofbits/divrep-while
+ * @problem.severity warning
+ * @tags security
  */
 
 import cpp
@@ -42,6 +45,7 @@ predicate varAccessAfterLoop(VariableAccess access, WhileStmt loop) {
 }
 
 from
+    File f,
     LocalVariable v,
     IntType int_type,
     VariableAccess v_access_crement,
@@ -50,8 +54,18 @@ from
     WhileStmt while_loop,
     CrementOperation crement_op
 where
-    // Variable is an integer.
+    // Sanity: variable does not exist in a unit test/example file
+    // Files can be ignored when databases are built, but this is not the case
+    // when scanning across large amounts of prebuilt databases.
+    //
+    // Remove if unnecessary, or add more filters (e.g for a thirdparty/ path)
+    f = v.getFile() and
+    not f.getAbsolutePath().matches("%test%") and
+    not f.getAbsolutePath().matches("%example%") and
+
+    // Variable is a signed integer.
     v.getType() = int_type and
+    int_type.isSigned() and
 
     // Variable is incremented inside loop.
     v_access_crement.getTarget() = v and
@@ -70,6 +84,5 @@ where
             access_after_loop.getTarget() = v |
             varAccessAfterLoop(access_after_loop, while_loop))
 
-select v,
-       "increment in loop:", v_access_crement,
-       "mem access in loop:", v_access_array
+select while_loop,
+    "Variable " + v_access_crement + " is incremented in loop with a memory access at " + v_access_array

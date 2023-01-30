@@ -12,6 +12,7 @@ Usage: import in Binary Ninja scripting console
 from queue import Queue
 
 import binaryninja as bn
+import binaryninja.log as log
 
 MLIL_EXTEND_INSTRUCTIONS = [
     bn.MediumLevelILOperation.MLIL_SX,
@@ -34,6 +35,9 @@ def find_divergent_representations(f, disass=False):
     instruction address of any divergent representation candidates found in the
     function.
     """
+    if disass:
+        log.log_info(f"Running analysis on {f.name}")
+
     try:
         if not f.mlil:
             return
@@ -56,8 +60,6 @@ def find_divergent_representations(f, disass=False):
 
             result = f"{f.name}@{hex(insn.address)}: {insn}"
             if disass:
-                import binaryninja.log as log
-
                 log.log_info(result)
             else:
                 print(result)

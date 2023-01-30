@@ -3,18 +3,24 @@ __init__.py
 
     Plugin module if commercial is not available.
 """
+import binaryninja.log as log
 from binaryninja.plugin import PluginCommand
 
 from .fdr import find_divergent_representations
 
 
 def run_all(bv):
+    total = 0
     for function in bv.functions:
-        find_divergent_representations(function, disass=True)
+        total += find_divergent_representations(function, disass=True)
+
+    log.log_info(f"Potential divergent representation instances for binary: {total}")
 
 
 def run_for_function(_, func):
-    find_divergent_representations(func, disass=True)
+    log.log_info(
+        f"Potential divergent representation instances for {func.name}: {find_divergent_representations(func, disass=True)}"
+    )
 
 
 PluginCommand.register(

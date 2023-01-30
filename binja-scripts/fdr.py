@@ -35,20 +35,23 @@ def find_divergent_representations(f, disass=False):
     instruction address of any divergent representation candidates found in the
     function.
     """
+    instances = 0
+
     if disass:
         log.log_info(f"Running analysis on {f.name}")
 
     try:
         if not f.mlil:
-            return
+            return instances
+
     # If binja has failed to analyze the function, the mlil attribute will be
     # inaccessible.
     except AttributeError as err:
         print(f"ERROR analyzing function: {f.name} - {err}")
-        return
+        return instances
 
     if not f.mlil.ssa_form:
-        return
+        return instances
 
     for insn in f.mlil.ssa_form.instructions:
         if (
@@ -63,6 +66,10 @@ def find_divergent_representations(f, disass=False):
                 log.log_info(result)
             else:
                 print(result)
+
+            instances += 1
+
+    return instances
 
 
 def is_phi_consuming_own_def(f, phi_node):

@@ -36,10 +36,6 @@ def find_divergent_representations(f, disass=False):
     function.
     """
     instances = 0
-
-    if disass:
-        log.log_info(f"Running analysis on {f.name}")
-
     try:
         if not f.mlil:
             return instances

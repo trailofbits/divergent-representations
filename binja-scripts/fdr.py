@@ -4,11 +4,10 @@ fdr.py
 
 Find Divergent Representations
 
-Usage: import in Binary Ninja scripting console
-
->>> import fdr
->>> for function in bv.functions:
-    fdr.find_divergent_representations(function)
+Usage:
+- Install as a Binary Ninja plugin in the GUI
+- Execute as a CLI tool with Binary Ninja API (requires commercial license):
+    $ python3 fdr.py <path to binary program>
 """
 import sys
 

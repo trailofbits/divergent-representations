@@ -12,43 +12,60 @@ Usage: import in Binary Ninja scripting console
 from queue import Queue
 
 import binaryninja as bn
+import binaryninja.log as log
 
 MLIL_EXTEND_INSTRUCTIONS = [
     bn.MediumLevelILOperation.MLIL_SX,
-    bn.MediumLevelILOperation.MLIL_ZX]
+    bn.MediumLevelILOperation.MLIL_ZX,
+]
 
 LLIL_EXTEND_INSTRUCTIONS = [
     bn.LowLevelILOperation.LLIL_ZX,
-    bn.LowLevelILOperation.LLIL_SX]
+    bn.LowLevelILOperation.LLIL_SX,
+]
 
 MLIL_ARITHMETIC_INSTRUCTIONS = [
     bn.MediumLevelILOperation.MLIL_ADD,
-    bn.MediumLevelILOperation.MLIL_SUB]
+    bn.MediumLevelILOperation.MLIL_SUB,
+]
 
 
-def find_divergent_representations(f):
+def find_divergent_representations(f, disass=False):
     """Given a function, print the MLIL SSA instruction and assembly
     instruction address of any divergent representation candidates found in the
     function.
     """
+    instances = 0
     try:
         if not f.mlil:
-            return
+            return instances
+
     # If binja has failed to analyze the function, the mlil attribute will be
     # inaccessible.
     except AttributeError as err:
-        print(f'ERROR analyzing function: {f.name} - {err}')
-        return
+        print(f"ERROR analyzing function: {f.name} - {err}")
+        return instances
 
     if not f.mlil.ssa_form:
-        return
+        return instances
 
     for insn in f.mlil.ssa_form.instructions:
-        if (is_phi_consuming_own_def(f, insn)
-                and get_downcast_uses(f, insn)
-                and are_vars_consumed_different_sizes(f, insn)
-                and is_used_in_64bit_operation(f, insn)):
-            print(f"{f.name}@{hex(insn.address)}: {insn}")
+        if (
+            is_phi_consuming_own_def(f, insn)
+            and get_downcast_uses(f, insn)
+            and are_vars_consumed_different_sizes(f, insn)
+            and is_used_in_64bit_operation(f, insn)
+        ):
+
+            result = f"{f.name}@{hex(insn.address)}: {insn}"
+            if disass:
+                log.log_info(result)
+            else:
+                print(result)
+
+            instances += 1
+
+    return instances
 
 
 def is_phi_consuming_own_def(f, phi_node):
@@ -67,8 +84,10 @@ def is_phi_consuming_own_def(f, phi_node):
             # the phi node.
 
             # Check that the operation to set this use is 64-bit.
-            if (use.operation == bn.MediumLevelILOperation.MLIL_SET_VAR_SSA
-                    and use.src.operation in MLIL_ARITHMETIC_INSTRUCTIONS):
+            if (
+                use.operation == bn.MediumLevelILOperation.MLIL_SET_VAR_SSA
+                and use.src.operation in MLIL_ARITHMETIC_INSTRUCTIONS
+            ):
                 for written in use.vars_written:
                     if written in phi_node.vars_read:
                         return True
@@ -107,8 +126,10 @@ def is_used_in_64bit_operation(f, phi_node):
 
     for var_def in phi_node.vars_written:
         for use in get_mlil_ssa_var_uses(f, var_def):
-            if (use.operation == bn.MediumLevelILOperation.MLIL_SET_VAR_SSA
-                    and use.src.operation in MLIL_ARITHMETIC_INSTRUCTIONS):
+            if (
+                use.operation == bn.MediumLevelILOperation.MLIL_SET_VAR_SSA
+                and use.src.operation in MLIL_ARITHMETIC_INSTRUCTIONS
+            ):
                 return True
     return False
 

@@ -58,7 +58,7 @@ def find_divergent_representations(f, disass=False):
         ):
 
             result = f"{f.name}@{hex(insn.address)}: {insn}"
-            instances.append(insn)
+
             if disass:
                 log.log_info(result)
             else:
@@ -189,7 +189,6 @@ def main():
         print(f'USAGE: {sys.argv[0]} <binary path>')
         sys.exit(-1)
 
-    log.log_to_stdout(log.LogLevel.InfoLog)
     div_reps = {}
     with bn.open_view(
             sys.argv[1],
@@ -198,7 +197,7 @@ def main():
             div_reps[function] = find_divergent_representations(function)
 
     n_div_reps = sum(len(function_reps) for function_reps in div_reps.values())
-    log.log_info(f'found {n_div_reps} divergent representations in {sys.argv[1]}')
+    print(f'found {n_div_reps} divergent representations in {sys.argv[1]}')
 
 if __name__ == '__main__':
     main()

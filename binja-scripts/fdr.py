@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 fdr.py
 
@@ -9,7 +10,7 @@ Usage: import in Binary Ninja scripting console
 >>> for function in bv.functions:
     fdr.find_divergent_representations(function)
 """
-from queue import Queue
+import sys
 
 import binaryninja as bn
 
@@ -33,23 +34,26 @@ def find_divergent_representations(f):
     """
     try:
         if not f.mlil:
-            return
+            return []
     # If binja has failed to analyze the function, the mlil attribute will be
     # inaccessible.
     except AttributeError as err:
         print(f'ERROR analyzing function: {f.name} - {err}')
-        return
+        return []
 
     if not f.mlil.ssa_form:
-        return
+        return []
 
+    div_reps = []
     for insn in f.mlil.ssa_form.instructions:
         if (is_phi_consuming_own_def(f, insn)
                 and get_downcast_uses(f, insn)
                 and are_vars_consumed_different_sizes(f, insn)
                 and is_used_in_64bit_operation(f, insn)):
             print(f"{f.name}@{hex(insn.address)}: {insn}")
+            div_reps.append(insn)
 
+    return div_reps
 
 def is_phi_consuming_own_def(f, phi_node):
     """Given a function and a MLIL SSA instruction of a Phi node operation,
@@ -157,3 +161,22 @@ def get_mlil_ssa_var_uses(f, ssa_var):
     variable within the function.
     """
     return f.mlil.ssa_form.get_ssa_var_uses(ssa_var)
+
+def main():
+
+    if len(sys.argv) != 2:
+        print(f'USAGE: {sys.argv[0]} <binary path>')
+        sys.exit(-1)
+
+    div_reps = {}
+    with bn.open_view(
+            sys.argv[1],
+            options={'analysis.limits.maxFunctionSize': 131072}) as bv:
+        for function in bv.functions:
+            div_reps[function] = find_divergent_representations(function)
+
+    n_div_reps = sum(len(function_reps) for function_reps in div_reps.values())
+    print(f'found {n_div_reps} divergent representations in {sys.argv[1]}')
+
+if __name__ == '__main__':
+    main()

@@ -16,9 +16,8 @@ def run_all(bv):
 
     n_div_reps = sum(len(function_reps) for function_reps in div_reps.values())
     log.log_info(
-            f"Potential divergent representation instances for binary: "
-            f"{n_div_reps}"
-        )
+        f"Potential divergent representation instances for binary: " f"{n_div_reps}"
+    )
 
 
 def run_for_function(_, func):
